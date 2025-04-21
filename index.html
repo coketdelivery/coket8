@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>코켓배송 - 가위바위보 배틀</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: 'Arial', sans-serif; }
+    .screen {
+      display: none;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+      min-height: 100vh;
+      text-align: center;
+      padding: 20px;
+    }
+    /* 인트로 텍스트 */
+    #intro-text { display: flex; background-color: #fff; color: #333; }
+    #intro-text h1 { font-size: 28px; margin-bottom: 10px; }
+    #intro-text p { margin: 5px 0; font-size: 20px; }
+    #begin-btn { margin-top: 20px; padding: 15px 30px; font-size: 22px; background-color: #4CAF50; color: #fff; border: none; border-radius: 10px; cursor: pointer; }
+
+    /* 게임 화면 */
+    #game {
+      background: url('1.png') no-repeat center center fixed;
+      background-size: cover;
+      color: #fff;
+      font-weight: bold;
+      text-shadow: 1px 1px 3px #000;
+      position: relative;
+    }
+    #status { font-size: 24px; margin-bottom: 10px; }
+    #computer-choice { font-size: 86px; margin-bottom: 10px; }
+    #game h1 { font-size: 32px; margin: 10px; }
+    button.choice {
+      padding: 15px 30px;
+      margin: 10px;
+      font-size: 24px;
+      background: rgba(255,255,255,0.85);
+      color: #333;
+      border: 2px solid #ff9900;
+      border-radius: 12px;
+      cursor: pointer;
+      width: 150px;
+      font-weight: bold;
+    }
+    button.choice:hover { background: #fff2cc; }
+    #result { font-size: 28px; margin-top: 20px; padding: 0 10px; }
+
+    /* 게임 화면 상단 크레딧 */
+    .game-credit {
+      position: absolute;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      text-align: center;
+      font-size: 14px;
+      color: #fff;
+      text-shadow: 1px 1px 2px #000;
+      line-height: 1.4;
+    }
+    .game-credit a {
+      color: #ffdd57;
+      text-decoration: underline;
+    }
+
+    /* 게임 오버 화면 */
+    #game-over {
+      background: url('c64f34b4-4113-4509-9745-96f0b3ae6592.png') no-repeat center center fixed;
+      background-size: cover;
+      color: #fff;
+      text-shadow: 1px 1px 3px #000;
+    }
+    #game-over h1 { font-size: 32px; margin-bottom: 10px; }
+    #game-over p { font-size: 22px; margin: 5px 0; }
+    #restart-btn { margin-top: 20px; padding: 12px 28px; font-size: 22px; background-color: #ff99cc; color: #fff; border: none; border-radius: 10px; cursor: pointer; }
+  </style>
+</head>
+<body>
+
+  <!-- 1) 인트로 화면 -->
+  <div id="intro-text" class="screen">
+    <div>
+      <h1>❤️코켓배송 가위바위보 배틀✊✌️🖐️</h1>
+      <p>컴퓨터와 가위, 바위, 보 중 하나를 선택하세요!</p>
+      <p>승리는 점수 +1, 패배는 목숨 -1.</p>
+      <p>무승부는 변화 없음.</p>
+      <p>연속 3번 승리 시 목숨 +1!</p>
+      <p>© 2025 코켓게임즈. All rights reserved.</p>
+      <p>유튜브 '걸코_Gulko' 저작권 콘텐츠입니다.</p>
+      <p><a href="https://www.youtube.com/@Gulko" target="_blank">https://www.youtube.com/@Gulko</a></p>
+      <button id="begin-btn">게임 시작</button>
+    </div>
+  </div>
+
+  <!-- 2) 게임 화면 -->
+  <div id="game" class="screen">
+    <!-- 상단 크레딧 -->
+    <div class="game-credit">
+      <p>걸코_Gulko저작권 콘텐츠입니다. <a href="https://www.youtube.com/@Gulko" target="_blank">https://www.youtube.com/@Gulko</a></p>
+    </div>
+    <div id="status">
+      Score: <span id="score">0</span> | 
+      Lives: <span id="lives">5</span>
+    </div>
+    <div id="computer-choice">?</div>
+    <h1>가위바위보 배틀!</h1>
+    <p>컴퓨터와 가위, 바위, 보 중 하나를 선택하세요.</p>
+    <div>
+      <button class="choice" onclick="play('가위')">✌️가위</button>
+      <button class="choice" onclick="play('바위')">👊바위</button>
+      <button class="choice" onclick="play('보')">🖐️보</button>
+    </div>
+    <p id="result"></p>
+  </div>
+
+  <!-- 3) 게임 오버 화면 -->
+  <div id="game-over" class="screen">
+    <h1>게임 오버! 😢</h1>
+    <p>최종 점수: <span id="final-score">0</span></p>
+    <p>코팡 구입은 걸코와 함께</p>
+    <p><a href="https://www.youtube.com/@Gulko" target="_blank">https://www.youtube.com/@Gulko</a></p>
+    <p>사랑합니다. 고객님</p>
+    <button id="restart-btn">다시 시작</button>
+  </div>
+
+  <!-- 오디오 -->
+  <audio id="correct-sound" src="1.mp3" preload="auto"></audio>
+  <audio id="wrong-sound" src="2.mp3" preload="auto"></audio>
+  <audio id="tie-sound" src="3.mp3" preload="auto"></audio>
+  <audio id="bonus-sound" src="bonus.mp3" preload="auto"></audio>
+  <audio id="bgm" src="bgm.mp3" loop preload="auto"></audio>
+
+  <script>
+    let lives = 5;
+    let score = 0;
+    let consecutiveWins = 0;
+
+    const choices = ['가위','바위','보'];
+    const emojis = { '가위': '✌️', '바위': '👊', '보': '🖐️' };
+
+    window.onload = () => {
+      showScreen('intro-text');
+    };
+
+    document.getElementById('begin-btn').addEventListener('click', () => {
+      showScreen('game');
+      const bgm = document.getElementById('bgm');
+      bgm.volume = 0.7; // 배경음악 볼륨 70%
+      bgm.play();
+      updateStatus();
+    });
+
+    // 중첩 재생을 위한 사운드 재생 함수
+    function playSound(id) {
+      const original = document.getElementById(id);
+      const sound = original.cloneNode();
+      sound.volume = original.volume;
+      sound.play();
+    }
+
+    function play(userChoice) {
+      if (lives <= 0) return;
+
+      const computerChoice = choices[Math.floor(Math.random() * choices.length)];
+      document.getElementById('computer-choice').textContent = emojis[computerChoice];
+
+      const resultEl = document.getElementById('result');
+
+      if (userChoice === computerChoice) {
+        consecutiveWins = 0;
+        resultEl.textContent = `🤝 무승부! 컴퓨터도 ${computerChoice}.`;
+        resultEl.style.color = '#fff';
+        playSound('tie-sound');
+      } else if (
+        (userChoice === '가위' && computerChoice === '보') ||
+        (userChoice === '바위' && computerChoice === '가위') ||
+        (userChoice === '보' && computerChoice === '바위')
+      ) {
+        score++;
+        consecutiveWins++;
+        resultEl.textContent = `🎉 승리! 당신: ${userChoice}, 컴퓨터: ${computerChoice}.`;
+        resultEl.style.color = '#fff';
+        playSound('correct-sound');
+
+        if (consecutiveWins >= 3) {
+          lives++;
+          playSound('bonus-sound');
+          consecutiveWins = 0;
+        }
+
+        updateStatus();
+      } else {
+        lives--;
+        consecutiveWins = 0;
+        resultEl.textContent = `😢 패배! 당신: ${userChoice}, 컴퓨터: ${computerChoice}.`;
+        resultEl.style.color = 'red';
+        playSound('wrong-sound');
+        updateStatus();
+
+        if (lives <= 0) {
+          document.getElementById('final-score').textContent = score;
+          showScreen('game-over');
+        }
+      }
+    }
+
+    document.getElementById('restart-btn').addEventListener('click', () => {
+      location.reload();
+    });
+
+    function updateStatus() {
+      document.getElementById('score').textContent = score;
+      document.getElementById('lives').textContent = lives;
+    }
+
+    function showScreen(id) {
+      ['intro-text','game','game-over'].forEach(key => {
+        document.getElementById(key).style.display = (key === id ? 'flex' : 'none');
+      });
+    }
+  </script>
+</body>
+</html>
